@@ -75,44 +75,37 @@ export const forgotPassword = async (email) => {
 
 // Reset Password Function
 export const resetPassword = async (email, otp, newPassword) => {
-  // Check if OTP is valid
-  if (recentOtp !== parseInt(otp)) {
-      throw { code: 400, message: 'OTP does not match' };
+  if (!email || !otp || !newPassword) {
+    throw { code: 400, message: 'Email, OTP, and new password are required' };
   }
 
-  // Validate password strength using regex
+  // Fetch user and OTP from the database
+  const user = await User.findOne({ email });
+  if (!user) {
+    throw { code: 400, message: 'User with this email does not exist' };
+  }
+
+  if (recentOtp !== otp) {
+    throw { code: 400, message: 'Invalid OTP' };
+  }
+
+  // Validate password strength
   const passwordPattern = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%?&])[A-Za-z\d@$!%*?&]{6,}$/;
   if (!passwordPattern.test(newPassword)) {
-      throw { 
-          code: 400, 
-          message: 'Password must be at least 6 characters long and include at least one uppercase letter, one lowercase letter, one number, and one special character (@$!%?&).' 
-      };
-  }
-
-  const emailPattren = /^[a-zA-Z0-9._%+-]+@gmail\.com$/;
-  if(!emailPattren.test(email)){
-    throw{
-      code: 400,
-      message: "Invalid Email!!",
-    }
+    throw { 
+      code: 400, 
+      message: 'Password must be at least 6 characters long and include one uppercase letter, one lowercase letter, one number, and one special character (@$!%?&).' 
+    };
   }
 
   // Hash the new password
   const hashedPassword = await bcrypt.hash(newPassword, 10);
 
-  // Find user and update password
-  const user = await User.findOneAndUpdate(
-      { email },
-      { password: hashedPassword },
-      { new: true }
-  );
-
-  if (!user) {
-      throw { code: 400, message: 'User with this email does not exist' };
-  }
-
-  // Reset OTP
+  // Update password and clear OTP
+  user.password = hashedPassword;
   recentOtp = null;
+  user.otpExpiry = null;
+  await user.save();
 
   return { message: 'Password reset successful' };
 };

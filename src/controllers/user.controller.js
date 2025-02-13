@@ -58,19 +58,11 @@ export const forgotPassword = async (req, res, next) => {
 
 
 export const resetPassword = async (req, res, next) => {
-    try {
-        const { email, otp, newPassword } = req.body;
-
-        if (!email || !otp || !newPassword) {
-            return res.status(400).json({ message: "Email, OTP, and new password are required" });
-        }
-
-        const data = await UserService.resetPassword(email, otp, newPassword);
-
-        res.status(HttpStatus.OK).json({
-            data,
-        });
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const { email, otp, newPassword } = req.body;
+    const result = await UserService.resetPassword(email, otp, newPassword);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(error.code || 500).json({ message: error.message || 'Internal Server Error' });
+  }
 };
