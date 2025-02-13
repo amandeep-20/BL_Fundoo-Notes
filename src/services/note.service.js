@@ -5,11 +5,24 @@ import bcrypt from 'bcrypt';
  
 
 // create note
-export const createNote = async (body)=>{
-    const note = await Note.create(body);
+export const createNote = async (userId, body) => {
+    if (!body.title || !body.description) {
+      throw { code: 400, message: 'Title and description are required' };
+    }
+  
+    if (!userId) {
+      throw { code: 401, message: 'Unauthorized: No user ID found' };
+    }
+  
+    const note = await Note.create({
+      title: body.title,
+      description: body.description,
+      userId: userId, 
+    });
+  
     return note;
-};
-
+  };
+  
 
 // get all notes
 export const getNotes = async (userId)=>{
@@ -18,31 +31,64 @@ export const getNotes = async (userId)=>{
 };
 
 export const getNoteById = async (noteId, userId) => {
-    return await Note.findOne({ _id: noteId, userId }); // Ensure user can only access their own notes
-};
+    if (!noteId) {
+      throw { code: 400, message: 'Note ID is required' };
+    }
+    if (!userId) {
+      throw { code: 401, message: 'Unauthorized: No user ID found' };
+    }
+  
+    const note = await Note.findOne({ _id: noteId, userId });
+    if (!note) {
+      throw { code: 404, message: 'Note not found' };
+    }
+  
+    return note;
+  };
+  
   
 // Update note by ID
 export const updateNoteById = async (noteId, userId, updateData) => {
-    return await Note.findOneAndUpdate(
-        { _id: noteId, userId }, // Ensure user can only update their own notes
-        updateData,
-        { new: true } // Return updated note
-    );
+  if (!noteId) {
+    throw { code: 400, message: 'Note ID is required' };
+  }
+  if (!userId) {
+    throw { code: 401, message: 'Unauthorized: No user ID found' };
+  }
+  if (!updateData || Object.keys(updateData).length === 0) {
+    throw { code: 400, message: 'Update data is required' };
+  }
+
+  const updatedNote = await Note.findOneAndUpdate(
+    { _id: noteId, userId }, // Ensure user can only update their own notes
+    updateData,
+    { new: true } // Return updated note
+  );
+
+  if (!updatedNote) {
+    throw { code: 404, message: 'Note not found or unauthorized' };
+  }
+
+  return updatedNote;
 };
+
 
 
 // delete
 export const deleteNote = async (noteId) => {
-    const note = await Note.findById(noteId);
+  if (!noteId) {
+    throw { code: 400, message: 'Note ID is required' };
+  }
 
-    if (!note) {
-        return null;
-    }
+  const note = await Note.findById(noteId);
+  if (!note) {
+    throw { code: 404, message: 'Note not found' };
+  }
 
-    // Toggle trash value instead of deleting
-    note.trash = !note.trash;
-    await note.save();
+  // Toggle trash status instead of deleting
+  note.trash = !note.trash;
+  await note.save();
 
-    return note;
+  return note;
 };
 
