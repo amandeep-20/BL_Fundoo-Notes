@@ -43,4 +43,27 @@ export const getUsers = async (req, res, next) => {
 
 
 
+export const forgotPassword = async (req, res, next) => {
+  try {
+      const data = await UserService.forgotPassword(req.body.email);
+      res.status(HttpStatus.OK).json({
+          code: HttpStatus.OK,
+          data,
+          message: 'OTP sent to email',
+      });
+  } catch (error) {
+      next(error);
+  }
+};
 
+
+
+export const resetPassword = async (req, res, next) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    const result = await UserService.resetPassword(email, otp, newPassword);
+    res.status(200).json(result);
+  } catch (error) {
+    res.status(error.code || 500).json({ message: error.message || 'Internal Server Error' });
+  }
+};

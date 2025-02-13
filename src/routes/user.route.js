@@ -14,4 +14,6 @@ router.get('/', userAuth, userController.getUsers);
 
 
 
+router.post('/forgot-password', userController.forgotPassword);
+router.post('/reset-password', userController.resetPassword);
 export default router;
