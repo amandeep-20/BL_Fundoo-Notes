@@ -1,0 +1,282 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Fundoo Notes API",
+    "description": "API for managing users and notes",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "http://localhost:3000"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "BearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
+      }
+    },
+    "schemas": {
+      "User": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "example": "John Doe"
+          },
+          "email": {
+            "type": "string",
+            "example": "johndoe@example.com"
+          },
+          "password": {
+            "type": "string",
+            "example": "securepassword"
+          }
+        },
+        "required": ["name", "email", "password"]
+      },
+      "Note": {
+        "type": "object",
+        "properties": {
+          "userId": {
+            "type": "string",
+            "example": "60d0fe4f5311236168a109ca"
+          },
+          "title": {
+            "type": "string",
+            "example": "Meeting Notes"
+          },
+          "description": {
+            "type": "string",
+            "example": "Discussed project roadmap and deadlines."
+          },
+          "isTrashed": {
+            "type": "boolean",
+            "example": false
+          }
+        },
+        "required": ["userId", "title", "description"]
+      }
+    }
+  },
+  "security": [{"BearerAuth": []}],
+  "paths": {
+    "/users": {
+      "post": {
+        "summary": "Create a new user",
+        "operationId": "createUser",
+        "tags": ["User"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/User"}
+            }
+          }
+        },
+        "responses": {"201": {"description": "User created successfully"}}
+      },
+      "get": {
+        "summary": "Get all users",
+        "operationId": "getAllUsers",
+        "security": [{"BearerAuth": []}],
+        "tags": ["User"],
+        "responses": {
+          "200": {
+            "description": "A list of users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/User"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/users/login": {
+      "post": {
+        "summary": "Login user",
+        "operationId": "loginUser",
+        "tags": ["User"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {"type": "string"},
+                  "password": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {"200": {"description": "User logged in successfully"}}
+      }
+    },
+    "/users/forgot-password": {
+      "post": {
+        "summary": "Forget password",
+        "operationId": "forgetPassword",
+        "tags": ["User"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"type": "object", "properties": {"email": {"type": "string"}}}
+            }
+          }
+        },
+        "responses": {"200": {"description": "Password reset email sent"}}
+      }
+    },
+    "/users/reset-password": {
+      "post": {
+        "summary": "Reset password",
+        "operationId": "resetPassword",
+        "tags": ["User"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "email": {"type": "string"},
+                  "otp": {"type": "string"},
+                  "newPassword": {"type": "string"}
+                }
+              }
+            }
+          }
+        },
+        "responses": {"200": {"description": "Password reset successful"}}
+      }
+    },
+    "/notes": {
+      "post": {
+        "summary": "Create a new note",
+        "operationId": "createNote",
+        "security": [{"BearerAuth": []}],
+        "tags": ["Note"],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {"$ref": "#/components/schemas/Note"}
+            }
+          }
+        },
+        "responses": {"201": {"description": "Note created successfully"}}
+      },
+      "get": {
+        "summary": "Get all notes",
+        "operationId": "getAllNotes",
+        "security": [{"BearerAuth": []}],
+        "tags": ["Note"],
+        "responses": {
+          "200": {
+            "description": "A list of notes",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {"$ref": "#/components/schemas/Note"}
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/notes/{id}": {
+      "get": {
+        "summary": "Get note by ID",
+        "operationId": "getNoteById",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Note"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note retrieved successfully"
+          }
+        }
+      },
+      "put": {
+        "summary": "Update a note",
+        "operationId": "updateNote",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Note"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note updated successfully"
+          }
+        }
+      },
+      "delete": {
+        "summary": "Delete a note",
+        "operationId": "deleteNote",
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "tags": [
+          "Note"
+        ],
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Note deleted successfully"
+          }
+        }
+      }
+    }
+  }
+}
